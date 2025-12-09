@@ -12,7 +12,7 @@ const (
 )
 
 func parsePackage(data string) (int, time.Duration, error) {
-	// TODO: реализовать функцию
+
 }
 
 func DayActionInfo(data string, weight, height float64) string {
