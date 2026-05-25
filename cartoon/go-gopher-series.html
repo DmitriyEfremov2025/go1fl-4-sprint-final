@@ -1,0 +1,943 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Гофер Гоша: три серии про Go</title>
+  <style>
+    :root {
+      --sky: #83d9ff;
+      --sky-deep: #438fe9;
+      --grass: #61c25a;
+      --leaf: #258848;
+      --ink: #10202b;
+      --muted: #4a6575;
+      --go: #00add8;
+      --go-dark: #007d9c;
+      --sand: #ffe8a7;
+      --wood: #8a5a34;
+      --board: #153c34;
+      --gopher: #b98254;
+      --gopher-dark: #704629;
+      --gopher-light: #ffd29c;
+      --white: rgba(255, 255, 255, 0.9);
+      font-family: Inter, "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 20% 6%, rgba(255, 255, 255, 0.9) 0 5%, transparent 5.4%),
+        radial-gradient(circle at 78% 12%, rgba(255, 255, 255, 0.8) 0 4%, transparent 4.3%),
+        linear-gradient(180deg, #daf6ff 0%, #8fd8ff 45%, #66bdf6 100%);
+    }
+
+    .app {
+      width: min(1240px, calc(100vw - 28px));
+      margin: 0 auto;
+      padding: 22px 0 30px;
+    }
+
+    header {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 18px;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      color: #053a56;
+      font-size: clamp(2.1rem, 5vw, 4.8rem);
+      line-height: 0.95;
+      text-shadow: 0 5px 0 rgba(255, 255, 255, 0.72);
+    }
+
+    .lead {
+      margin: 0;
+      max-width: 780px;
+      color: #19445a;
+      font-weight: 650;
+      line-height: 1.45;
+      font-size: clamp(1rem, 2vw, 1.18rem);
+    }
+
+    .episode-picker {
+      display: grid;
+      gap: 9px;
+      min-width: min(420px, 100%);
+      padding: 14px;
+      border-radius: 24px;
+      background: rgba(255, 255, 255, 0.72);
+      box-shadow: 0 16px 42px rgba(13, 58, 91, 0.16);
+      backdrop-filter: blur(8px);
+    }
+
+    .episode-picker label {
+      color: #07445f;
+      font-weight: 900;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      font-size: 0.78rem;
+    }
+
+    select,
+    button {
+      border: 0;
+      font: inherit;
+      font-weight: 900;
+    }
+
+    select {
+      width: 100%;
+      padding: 12px 16px;
+      border-radius: 999px;
+      color: #04384f;
+      background: #fff;
+      box-shadow: inset 0 0 0 3px rgba(0, 173, 216, 0.22);
+    }
+
+    .stage {
+      position: relative;
+      min-height: 720px;
+      overflow: hidden;
+      border: 9px solid #fff;
+      border-radius: 38px;
+      background:
+        radial-gradient(circle at 86% 11%, #ffd762 0 5.5%, rgba(255, 215, 98, 0.24) 5.8% 8.5%, transparent 8.8%),
+        linear-gradient(var(--sky), var(--sky-deep) 61%, var(--grass) 61%, #31933e 100%);
+      box-shadow: 0 28px 78px rgba(5, 64, 100, 0.34);
+    }
+
+    .stage::before {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse at 35% 93%, #5b3723 0 9%, transparent 9.4%),
+        radial-gradient(ellipse at 35% 96%, #8a5a34 0 15%, transparent 15.4%),
+        repeating-linear-gradient(90deg, transparent 0 44px, rgba(255, 255, 255, 0.12) 44px 48px);
+      pointer-events: none;
+      content: "";
+    }
+
+    .cloud {
+      position: absolute;
+      top: 72px;
+      left: -220px;
+      width: 190px;
+      height: 54px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.86);
+      filter: drop-shadow(0 7px 10px rgba(32, 88, 130, 0.12));
+      animation: drift 32s linear infinite;
+    }
+
+    .cloud::before,
+    .cloud::after {
+      position: absolute;
+      border-radius: 50%;
+      background: inherit;
+      content: "";
+    }
+
+    .cloud::before { left: 30px; top: -36px; width: 74px; height: 74px; }
+    .cloud::after { right: 26px; top: -24px; width: 62px; height: 62px; }
+    .cloud.two { top: 168px; animation-duration: 43s; animation-delay: -18s; transform: scale(0.8); opacity: 0.78; }
+
+    .lesson-card {
+      position: absolute;
+      z-index: 4;
+      top: 28px;
+      left: 28px;
+      width: min(510px, calc(100% - 56px));
+      padding: 22px;
+      border: 4px solid rgba(0, 125, 156, 0.2);
+      border-radius: 30px;
+      background: var(--white);
+      box-shadow: 0 20px 48px rgba(5, 53, 82, 0.22);
+      backdrop-filter: blur(10px);
+    }
+
+    .kicker {
+      display: inline-flex;
+      gap: 9px;
+      align-items: center;
+      margin-bottom: 10px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      color: #006d90;
+      background: #dff8ff;
+      font-weight: 1000;
+      font-size: 0.8rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .lesson-title {
+      margin: 0 0 8px;
+      color: #053a56;
+      font-size: clamp(1.5rem, 3vw, 2.55rem);
+      line-height: 1.04;
+    }
+
+    .lesson-text {
+      min-height: 5em;
+      margin: 0;
+      color: #203b4b;
+      font-size: 1.1rem;
+      line-height: 1.48;
+      font-weight: 650;
+    }
+
+    .chalkboard {
+      position: absolute;
+      z-index: 4;
+      top: 235px;
+      right: 30px;
+      width: min(560px, calc(100% - 60px));
+      min-height: 340px;
+      padding: 21px;
+      border: 13px solid var(--wood);
+      border-radius: 22px;
+      color: #efffed;
+      background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.09), transparent 30%),
+        repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.025) 0 2px, transparent 2px 28px),
+        var(--board);
+      box-shadow: 0 18px 0 #604024, 0 30px 46px rgba(5, 53, 82, 0.28);
+    }
+
+    .board-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 13px;
+      color: #b9f4ff;
+      font-weight: 1000;
+    }
+
+    .badge {
+      padding: 6px 10px;
+      border-radius: 999px;
+      color: #093a43;
+      background: #ffe888;
+      font-size: 0.8rem;
+    }
+
+    pre {
+      margin: 0;
+      white-space: pre-wrap;
+      font: 800 clamp(0.9rem, 1.8vw, 1.08rem) / 1.45 "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    }
+
+    .kw { color: #96e8ff; }
+    .str { color: #ffe082; }
+    .cm { color: #9fdd9f; }
+    .num { color: #ffb1a6; }
+
+    .terminal {
+      margin-top: 16px;
+      padding: 12px;
+      border-radius: 14px;
+      color: #bfffc3;
+      background: rgba(0, 0, 0, 0.34);
+      font: 800 0.92rem / 1.4 "SFMono-Regular", Consolas, monospace;
+    }
+
+    .bubble {
+      position: absolute;
+      z-index: 6;
+      left: 310px;
+      bottom: 270px;
+      max-width: 330px;
+      padding: 16px 18px;
+      border: 4px solid #06354b;
+      border-radius: 26px;
+      background: #fff;
+      box-shadow: 0 10px 0 rgba(4, 59, 92, 0.13);
+      font-size: 1rem;
+      font-weight: 1000;
+      animation: bubble 2s ease-in-out infinite;
+    }
+
+    .bubble::after {
+      position: absolute;
+      bottom: -22px;
+      left: 34px;
+      width: 30px;
+      height: 30px;
+      border-right: 4px solid #06354b;
+      border-bottom: 4px solid #06354b;
+      background: #fff;
+      transform: rotate(45deg);
+      content: "";
+    }
+
+    .gopher {
+      position: absolute;
+      z-index: 5;
+      left: 124px;
+      bottom: 88px;
+      width: 230px;
+      height: 292px;
+      transform-origin: center bottom;
+      animation: idle 2.2s ease-in-out infinite;
+    }
+
+    .gopher.teach { animation: teach 1.25s ease-in-out infinite; }
+    .gopher.jump { animation: jump 1.18s ease-in-out infinite; }
+    .gopher.think { animation: think 1.65s ease-in-out infinite; }
+    .gopher.code { animation: codeDance 1.55s ease-in-out infinite; }
+
+    .tail {
+      position: absolute;
+      left: -48px;
+      bottom: 78px;
+      width: 98px;
+      height: 164px;
+      border-radius: 60% 40% 55% 55%;
+      background: var(--gopher-dark);
+      transform: rotate(-24deg);
+      transform-origin: right bottom;
+      animation: wag 1.45s ease-in-out infinite;
+    }
+
+    .body {
+      position: absolute;
+      left: 38px;
+      bottom: 0;
+      width: 152px;
+      height: 192px;
+      border-radius: 48% 48% 34% 34%;
+      background: var(--gopher);
+      box-shadow: inset -20px -14px 0 rgba(68, 38, 22, 0.13);
+    }
+
+    .belly {
+      position: absolute;
+      left: 29px;
+      bottom: 23px;
+      width: 94px;
+      height: 122px;
+      border-radius: 48%;
+      background: var(--gopher-light);
+    }
+
+    .head {
+      position: absolute;
+      left: 22px;
+      top: 18px;
+      width: 178px;
+      height: 148px;
+      border-radius: 48% 48% 44% 44%;
+      background: var(--gopher);
+      box-shadow: inset -18px -8px 0 rgba(68, 38, 22, 0.12);
+    }
+
+    .ear {
+      position: absolute;
+      top: 2px;
+      width: 56px;
+      height: 60px;
+      border: 8px solid var(--gopher);
+      border-radius: 50%;
+      background: #efbc82;
+    }
+
+    .ear.left { left: 8px; }
+    .ear.right { right: 10px; }
+
+    .eye {
+      position: absolute;
+      top: 64px;
+      width: 23px;
+      height: 28px;
+      border-radius: 50%;
+      background: #111;
+      box-shadow: inset 5px 5px 0 #fff;
+      animation: blink 5.4s infinite;
+    }
+
+    .eye.left { left: 52px; }
+    .eye.right { right: 52px; }
+    .nose { position: absolute; left: 74px; top: 84px; width: 32px; height: 22px; border-radius: 50%; background: #332017; }
+    .mouth { position: absolute; left: 67px; top: 106px; width: 46px; height: 24px; border-bottom: 5px solid #332017; border-radius: 0 0 50% 50%; }
+    .tooth { position: absolute; top: 108px; width: 14px; height: 22px; border-radius: 0 0 4px 4px; background: #fff9e8; }
+    .tooth.one { left: 75px; }
+    .tooth.two { left: 91px; }
+
+    .cap {
+      position: absolute;
+      z-index: 3;
+      left: 47px;
+      top: -2px;
+      width: 90px;
+      height: 36px;
+      border-radius: 50% 50% 8px 8px;
+      background: var(--go);
+      transform: rotate(-4deg);
+    }
+
+    .cap::after {
+      position: absolute;
+      right: -32px;
+      bottom: 0;
+      width: 42px;
+      height: 14px;
+      border-radius: 0 999px 999px 0;
+      background: var(--go-dark);
+      content: "";
+    }
+
+    .paw {
+      position: absolute;
+      z-index: 2;
+      top: 150px;
+      width: 48px;
+      height: 78px;
+      border-radius: 999px;
+      background: var(--gopher-dark);
+      transform-origin: 50% 12%;
+    }
+
+    .paw.left { left: 9px; transform: rotate(26deg); }
+    .paw.right { right: 10px; transform: rotate(-35deg); animation: point 1.2s ease-in-out infinite; }
+    .foot { position: absolute; bottom: -6px; width: 64px; height: 34px; border-radius: 50%; background: var(--gopher-dark); }
+    .foot.left { left: 40px; }
+    .foot.right { right: 27px; }
+
+    .laptop {
+      position: absolute;
+      z-index: 7;
+      left: 176px;
+      bottom: 92px;
+      width: 128px;
+      height: 80px;
+      border: 5px solid #245061;
+      border-radius: 12px;
+      background: #dff9ff;
+      box-shadow: 0 10px 0 rgba(36, 80, 97, 0.22);
+      transform: rotate(-3deg);
+    }
+
+    .laptop::before {
+      position: absolute;
+      inset: 12px 15px;
+      border-radius: 8px;
+      color: var(--go-dark);
+      background: #083b52;
+      content: "Go";
+      display: grid;
+      place-items: center;
+      font-weight: 1000;
+      font-size: 1.45rem;
+    }
+
+    .prop {
+      position: absolute;
+      z-index: 6;
+      right: 210px;
+      bottom: 110px;
+      display: grid;
+      place-items: center;
+      width: 118px;
+      height: 118px;
+      border: 5px solid rgba(6, 53, 75, 0.18);
+      border-radius: 30px;
+      background: var(--sand);
+      box-shadow: 0 13px 0 rgba(112, 70, 41, 0.18);
+      font-size: 3.2rem;
+      animation: prop 1s ease-in-out infinite alternate;
+    }
+
+    .quiz {
+      position: absolute;
+      z-index: 4;
+      left: 32px;
+      bottom: 28px;
+      width: min(430px, calc(100% - 64px));
+      padding: 15px;
+      border-radius: 22px;
+      background: rgba(255, 255, 255, 0.78);
+      box-shadow: 0 12px 34px rgba(5, 53, 82, 0.18);
+      backdrop-filter: blur(8px);
+    }
+
+    .quiz strong {
+      display: block;
+      color: #006d90;
+      margin-bottom: 5px;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 14px;
+      align-items: center;
+      margin-top: 15px;
+      padding: 15px;
+      border-radius: 24px;
+      background: rgba(255, 255, 255, 0.75);
+      box-shadow: 0 14px 38px rgba(5, 53, 82, 0.13);
+    }
+
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 8px;
+      color: #053a56;
+      font-weight: 1000;
+    }
+
+    .progress {
+      height: 15px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: rgba(0, 125, 156, 0.16);
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #00add8, #54d36b, #ffe36d, #ff8c70);
+      transition: width 0.35s ease;
+    }
+
+    .buttons { display: flex; flex-wrap: wrap; gap: 10px; justify-content: end; }
+
+    button {
+      padding: 12px 17px;
+      border-radius: 999px;
+      color: #fff;
+      background: var(--go-dark);
+      box-shadow: 0 5px 0 #055469;
+      cursor: pointer;
+      transition: transform 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
+    }
+
+    button:hover { transform: translateY(-2px); background: #0099bd; box-shadow: 0 7px 0 #055469; }
+    button:active { transform: translateY(3px); box-shadow: 0 2px 0 #055469; }
+
+    .series-map {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .map-card {
+      padding: 14px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.78);
+      box-shadow: 0 10px 28px rgba(5, 53, 82, 0.1);
+    }
+
+    .map-card strong { display: block; color: #006d90; margin-bottom: 5px; }
+
+    @keyframes drift { from { transform: translateX(0); } to { transform: translateX(calc(100vw + 560px)); } }
+    @keyframes bubble { 50% { transform: translateY(-7px); } }
+    @keyframes idle { 50% { transform: translateY(-8px) rotate(1deg); } }
+    @keyframes teach { 0%, 100% { transform: rotate(0); } 45% { transform: translateY(-10px) rotate(-3deg); } 72% { transform: translateY(-4px) rotate(3deg); } }
+    @keyframes jump { 0%, 100% { transform: translateY(0) scaleY(1); } 45% { transform: translateY(-42px) scaleY(1.03); } 78% { transform: translateY(0) scaleY(0.94); } }
+    @keyframes think { 0%, 100% { transform: rotate(0); } 35% { transform: rotate(-6deg); } 70% { transform: rotate(5deg); } }
+    @keyframes codeDance { 0%, 100% { transform: translateX(0); } 30% { transform: translateX(-8px) rotate(-2deg); } 70% { transform: translateX(8px) rotate(2deg); } }
+    @keyframes wag { 50% { transform: rotate(-35deg); } }
+    @keyframes blink { 0%, 47%, 51%, 100% { transform: scaleY(1); } 49% { transform: scaleY(0.08); } }
+    @keyframes point { 50% { transform: rotate(-74deg) translateY(-6px); } }
+    @keyframes prop { from { transform: translateY(0) rotate(-4deg); } to { transform: translateY(-14px) rotate(6deg); } }
+
+    @media (max-width: 980px) {
+      header { grid-template-columns: 1fr; }
+      .stage { min-height: 940px; }
+      .chalkboard { top: 408px; left: 28px; right: auto; }
+      .bubble { left: 250px; bottom: 318px; }
+      .prop { right: 56px; bottom: 260px; }
+      .series-map { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 640px) {
+      .stage { min-height: 1010px; border-radius: 26px; border-width: 5px; }
+      .lesson-card, .chalkboard { left: 15px; width: calc(100% - 30px); }
+      .chalkboard { top: 455px; }
+      .gopher { left: 36px; transform: scale(0.86); transform-origin: left bottom; }
+      .bubble { left: 136px; right: 16px; bottom: 360px; }
+      .prop { width: 84px; height: 84px; right: 24px; bottom: 235px; font-size: 2.2rem; }
+      .controls { grid-template-columns: 1fr; }
+      .buttons { justify-content: start; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header>
+      <div>
+        <h1>Гофер Гоша: Go за 3 серии</h1>
+        <p class="lead">Улучшенный учебный мультфильм: больше сцен, крупнее код, мини-викторины, автостарт для записи и звуковые эффекты. Каждая серия рассчитана на 5 минут.</p>
+      </div>
+      <div class="episode-picker">
+        <label for="episodeSelect">Выбери серию</label>
+        <select id="episodeSelect"></select>
+      </div>
+    </header>
+
+    <section class="stage" aria-label="Мультфильм про Go">
+      <div class="cloud"></div>
+      <div class="cloud two"></div>
+
+      <article class="lesson-card" aria-live="polite">
+        <span class="kicker" id="episodeLabel">Серия 1</span>
+        <h2 class="lesson-title" id="sceneTitle">Гоша открывает Go</h2>
+        <p class="lesson-text" id="sceneText">Нажмите старт, чтобы начать серию.</p>
+      </article>
+
+      <section class="chalkboard" aria-label="Код и заметки">
+        <div class="board-top">
+          <span id="boardTitle">На доске</span>
+          <span class="badge" id="sceneCounter">1 / 12</span>
+        </div>
+        <pre id="codeBlock"></pre>
+        <div class="terminal" id="terminal">$ go run .</div>
+      </section>
+
+      <div class="bubble" id="bubble">Готов к серии?</div>
+      <div class="prop" id="prop" aria-hidden="true">🎬</div>
+
+      <div class="gopher teach" id="gopher" aria-hidden="true">
+        <div class="tail"></div>
+        <div class="body"><div class="belly"></div></div>
+        <div class="head">
+          <div class="cap"></div>
+          <div class="ear left"></div>
+          <div class="ear right"></div>
+          <div class="eye left"></div>
+          <div class="eye right"></div>
+          <div class="nose"></div>
+          <div class="mouth"></div>
+          <div class="tooth one"></div>
+          <div class="tooth two"></div>
+        </div>
+        <div class="paw left"></div>
+        <div class="paw right"></div>
+        <div class="foot left"></div>
+        <div class="foot right"></div>
+      </div>
+
+      <div class="laptop" aria-hidden="true"></div>
+
+      <aside class="quiz">
+        <strong id="quizTitle">Вопрос Гоши</strong>
+        <span id="quizText">Что делает функция main?</span>
+      </aside>
+    </section>
+
+    <section class="controls" aria-label="Управление">
+      <div>
+        <div class="progress-label">
+          <span id="status">Ожидает старта</span>
+          <span id="timeLeft">05:00</span>
+        </div>
+        <div class="progress"><div class="progress-bar" id="progressBar"></div></div>
+      </div>
+      <div class="buttons">
+        <button type="button" id="playButton">Старт со звуком</button>
+        <button type="button" id="pauseButton">Пауза</button>
+        <button type="button" id="nextButton">Следующая сцена</button>
+      </div>
+    </section>
+
+    <section class="series-map" aria-label="Содержание серий">
+      <div class="map-card"><strong>Серия 1: первые шаги</strong>package, main, вывод, переменные, типы и запуск программы.</div>
+      <div class="map-card"><strong>Серия 2: логика</strong>функции, возвращаемые значения, условия, switch и обработка ошибок.</div>
+      <div class="map-card"><strong>Серия 3: практика</strong>циклы, slices, maps, structs и маленький CLI-проект.</div>
+    </section>
+  </main>
+
+  <script>
+    const EPISODE_MS = 5 * 60 * 1000;
+
+    const episodes = [
+      {
+        name: "Серия 1: первые шаги в Go",
+        summary: "Гоша узнает, как устроена Go-программа, как запускать код и где хранить данные.",
+        scenes: [
+          ["Гоша находит голубую книгу", "Сегодня Гоша открывает Go: простой, строгий и быстрый язык для надежных программ.", "Что означает слово package?", "📘", "teach", "package main\n\n// каждая программа живет в пакете", "$ go version", "package объединяет файлы одной программы."],
+          ["Вход в программу", "Функция main — стартовая дверь. Когда запускаем программу, Go входит именно сюда.", "Почему main не получает аргументы?", "🚪", "jump", "package main\n\nfunc main() {\n    println(\"Привет, Гоша!\")\n}", "$ go run .\nПривет, Гоша!", "main — точка входа исполняемой программы."],
+          ["Красивый вывод", "Для форматированного вывода Гоша подключает пакет fmt и вызывает fmt.Println.", "Что делает import?", "💬", "code", "package main\n\nimport \"fmt\"\n\nfunc main() {\n    fmt.Println(\"Go говорит привет\")\n}", "$ go run .\nGo говорит привет", "import подключает готовые возможности пакетов."],
+          ["Комментарии для будущего Гоши", "Комментарии не выполняются, зато помогают объяснить смысл кода человеку.", "Когда комментарий полезен?", "✏️", "think", "// Считаем желуди для зимы\nacorns := 7\nfmt.Println(acorns)", "$ go run .\n7", "Комментарии объясняют намерение, а не очевидную операцию."],
+          ["Переменные-коробочки", "Переменная хранит значение. Короткая запись := удобна внутри функций.", "Где можно использовать := ?", "📦", "teach", "func main() {\n    acorns := 5\n    acorns = acorns + 2\n    fmt.Println(acorns)\n}", "$ go run .\n7", "Имя переменной должно помогать читать программу."],
+          ["Явные типы", "Go умеет выводить тип, но можно написать его явно: var steps int.", "Зачем типы компилятору?", "🏷️", "think", "var steps int = 1200\nvar name string = \"Гоша\"\nvar ready bool = true", "$ go run .\nГоша 1200 true", "Типы помогают находить ошибки до запуска."],
+          ["Числа и строки", "Числа складываются, строки склеиваются, а bool хранит true или false.", "Что будет при 2 + \"2\"?", "🧩", "code", "distance := 3.5\nunit := \"км\"\nfmt.Println(distance, unit)", "$ go run .\n3.5 км", "Go не смешивает разные типы без явного решения."],
+          ["Константы", "Если значение не должно меняться, Гоша делает его константой.", "Чем const отличается от var?", "🔒", "teach", "const lesson = \"Go basics\"\nconst maxAcorns = 10\nfmt.Println(lesson, maxAcorns)", "$ go run .\nGo basics 10", "Константы защищают важные значения от случайной замены."],
+          ["Форматированный текст", "fmt.Printf подставляет значения в шаблон. Так удобно собирать сообщения.", "Что значит %.2f?", "🪄", "code", "speed := 4.725\nfmt.Printf(\"Скорость: %.2f км/ч\\n\", speed)", "$ go run .\nСкорость: 4.72 км/ч", "Формат %.2f оставляет две цифры после точки."],
+          ["Ошибки компиляции — друзья", "Если Гоша ошибся, компилятор подсказывает место и причину.", "Почему ошибка до запуска полезна?", "🛠️", "think", "message := \"hello\"\nfmt.Println(message)\n// неиспользуемые переменные Go не любит", "$ go run .\nhello", "Строгость Go делает код чище."],
+          ["Мини-итог серии", "Гоша уже знает package, import, main, переменные, типы и вывод на экран.", "Какая команда запускает программу?", "🌟", "jump", "package main\n\nimport \"fmt\"\n\nfunc main() {\n    name := \"Гоша\"\n    fmt.Println(\"Ура,\", name)\n}", "$ go run .\nУра, Гоша", "Команда go run собирает и запускает программу."],
+          ["Домашнее задание Гоши", "Создай переменные name, steps и ready, а затем выведи их через fmt.Println.", "Какие три типа ты применишь?", "🏁", "teach", "name := \"Гоша\"\nsteps := 1200\nready := true\nfmt.Println(name, steps, ready)", "$ go run .\nГоша 1200 true", "Первая серия завершена: база заложена."]
+        ]
+      },
+      {
+        name: "Серия 2: функции, логика и ошибки",
+        summary: "Гоша учится дробить программу на функции и выбирать правильный путь.",
+        scenes: [
+          ["Зачем нужны функции", "Функция дает имя действию. Так код становится короче и понятнее.", "Что повторяется в твоем коде?", "🧰", "teach", "func greet(name string) {\n    fmt.Println(\"Привет,\", name)\n}", "$ go run .\nПривет, Гоша", "Функции убирают повторение и показывают намерение."],
+          ["Параметры", "Параметры — это входные данные функции. Гоша передает имя и число шагов.", "Сколько параметров у функции?", "🎒", "code", "func report(name string, steps int) {\n    fmt.Println(name, steps)\n}", "$ go run .\nГоша 900", "Параметр имеет имя и тип."],
+          ["Возвращаем результат", "Функция может вернуть значение. Например, удвоить число шагов.", "Где пишется тип результата?", "↩️", "jump", "func double(steps int) int {\n    return steps * 2\n}", "$ go run .\n1800", "Тип результата пишется после списка параметров."],
+          ["Несколько результатов", "Go-функции часто возвращают результат и ошибку. Это честный способ говорить о проблемах.", "Почему error лучше паники?", "🧯", "think", "func findFood(ok bool) (string, error) {\n    if !ok { return \"\", errors.New(\"пусто\") }\n    return \"желудь\", nil\n}", "$ go run .\nжелудь", "Ошибку нужно проверять рядом с вызовом."],
+          ["Условие if", "if выбирает ветку. Если условие истинно, Гоша идет к запасам.", "Что такое bool-условие?", "🔀", "teach", "if acorns >= 5 {\n    fmt.Println(\"запас готов\")\n} else {\n    fmt.Println(\"ищем еще\")\n}", "$ go run .\nзапас готов", "Условие должно давать true или false."],
+          ["Короткая переменная в if", "В Go можно подготовить значение прямо в строке if.", "Где видна переменная speed?", "⚡", "code", "if speed := 4.7; speed > 4 {\n    fmt.Println(\"быстро\")\n}", "$ go run .\nбыстро", "Такая переменная живет только внутри if/else."],
+          ["switch без суеты", "Когда вариантов много, switch читается лучше длинной цепочки if.", "Что делает default?", "🧭", "think", "switch day {\ncase \"sat\", \"sun\":\n    fmt.Println(\"выходной\")\ndefault:\n    fmt.Println(\"учимся\")\n}", "$ go run .\nучимся", "default срабатывает, если case не подошли."],
+          ["Область видимости", "Переменная видна только в своем блоке. Гоша не ищет желудь за пределами норки.", "Что такое блок?", "🏡", "teach", "func main() {\n    name := \"Гоша\"\n    {\n        snack := \"орех\"\n        fmt.Println(name, snack)\n    }\n}", "$ go run .\nГоша орех", "Блок ограничивается фигурными скобками."],
+          ["defer на уборку", "defer откладывает действие до выхода из функции. Гоша закрывает рюкзак после прогулки.", "Когда выполнится defer?", "🎒", "code", "func walk() {\n    defer fmt.Println(\"закрыли рюкзак\")\n    fmt.Println(\"гуляем\")\n}", "$ go run .\nгуляем\nзакрыли рюкзак", "defer полезен для закрытия ресурсов."],
+          ["Проверяем ошибки", "Гоша не игнорирует err. Если проблема есть — возвращает понятное сообщение.", "Почему err нельзя забывать?", "🚦", "think", "food, err := findFood(false)\nif err != nil {\n    fmt.Println(\"ошибка:\", err)\n    return\n}\nfmt.Println(food)", "$ go run .\nошибка: пусто", "Явная проверка ошибок — привычный стиль Go."],
+          ["Собираем логику", "Теперь Гоша объединяет функцию, условие и возвращаемое значение.", "Где лучше оставить return?", "🧪", "jump", "func status(steps int) string {\n    if steps >= 1000 { return \"отлично\" }\n    return \"еще немного\"\n}", "$ go run .\nотлично", "Ранний return часто делает код проще."],
+          ["Финал второй серии", "Гоша понял: функции разделяют задачи, условия выбирают путь, ошибки помогают не падать.", "Что вернет твоя функция?", "🏆", "teach", "func main() {\n    fmt.Println(status(1200))\n}", "$ go run .\nотлично", "Вторая серия завершена: логика стала понятной."]
+        ]
+      },
+      {
+        name: "Серия 3: коллекции и мини-проект",
+        summary: "Гоша собирает данные в slices, maps и structs, а потом делает маленький CLI-трекер.",
+        scenes: [
+          ["Повторяем с for", "В Go один главный цикл — for. Он умеет работать как счетчик и как while.", "Почему одного for хватает?", "🔁", "jump", "for i := 1; i <= 3; i++ {\n    fmt.Println(\"шаг\", i)\n}", "$ go run .\nшаг 1\nшаг 2\nшаг 3", "Цикл повторяет действия без копирования строк."],
+          ["range по списку", "range помогает пройти по каждому элементу с индексом и значением.", "Что такое индекс?", "📋", "code", "steps := []int{400, 900, 1200}\nfor i, value := range steps {\n    fmt.Println(i, value)\n}", "$ go run .\n0 400\n1 900\n2 1200", "Индекс показывает позицию элемента."],
+          ["Slices растут", "Slice — гибкий список. append добавляет новые значения.", "append меняет исходный slice?", "🧺", "teach", "foods := []string{\"орех\"}\nfoods = append(foods, \"ягода\")\nfmt.Println(foods)", "$ go run .\n[орех ягода]", "Результат append обычно присваивают обратно."],
+          ["Maps: быстрый справочник", "Map хранит пары ключ-значение. Гоша считает запасы по названию.", "Какой тип у ключа?", "🗺️", "think", "stock := map[string]int{\n    \"орех\": 5,\n    \"ягода\": 8,\n}\nfmt.Println(stock[\"орех\"])", "$ go run .\n5", "Ключ должен быть сравнимым типом."],
+          ["Проверка наличия ключа", "Map возвращает второе значение ok, чтобы понять, был ли ключ найден.", "Почему ноль не всегда значит нет?", "🔎", "code", "count, ok := stock[\"шишка\"]\nif !ok {\n    fmt.Println(\"нет в запасах\")\n}\nfmt.Println(count)", "$ go run .\nнет в запасах\n0", "ok отличает отсутствующий ключ от нулевого значения."],
+          ["Struct: свой тип данных", "Struct объединяет связанные поля. Гоша описывает тренировку одной сущностью.", "Какие поля нужны тренировке?", "🧱", "teach", "type Workout struct {\n    Kind string\n    Steps int\n}\n\nw := Workout{Kind: \"walk\", Steps: 1200}", "$ go run .\n{walk 1200}", "Struct делает данные выразительными."],
+          ["Метод для struct", "Метод — функция, привязанная к типу. Гоша учит Workout говорить отчет.", "Что такое receiver?", "🎙️", "code", "func (w Workout) Report() string {\n    return fmt.Sprintf(\"%s: %d\", w.Kind, w.Steps)\n}", "$ go run .\nwalk: 1200", "Receiver стоит перед именем метода."],
+          ["Пакеты проекта", "Код удобно раскладывать по пакетам: main запускает, внутренние пакеты считают.", "Зачем разделять пакеты?", "📁", "think", "project/\n  cmd/tracker/main.go\n  internal/daysteps/daysteps.go\n  internal/spentcalories/calories.go", "$ go test ./...", "Пакеты уменьшают связность и упрощают тесты."],
+          ["Тесты берегут Гошу", "Тест проверяет ожидание. Если код сломается, Go быстро сообщит.", "Что такое want и got?", "✅", "teach", "func TestDouble(t *testing.T) {\n    got := double(4)\n    want := 8\n    assert.Equal(t, want, got)\n}", "$ go test ./...\nok", "Тест фиксирует поведение программы."],
+          ["Мини CLI-трекер", "Гоша собирает ввод, парсит шаги и выводит отчет пользователю.", "Какая ошибка возможна при вводе?", "⌨️", "code", "input := \"1200,30m\"\nsteps, duration, err := parse(input)\nif err != nil { return }\nfmt.Println(steps, duration)", "$ go run .\n1200 30m0s", "CLI должен понятно реагировать на неверные данные."],
+          ["Рефакторинг без страха", "Когда тесты есть, Гоша может улучшать код маленькими шагами.", "Что меняем первым?", "🧹", "think", "// было: длинная main\n// стало: parse, calculate, format\n// каждая функция делает одну вещь", "$ go test ./...\nok", "Маленькие функции проще читать и проверять."],
+          ["Финал курса", "Три серии закончены: Гоша знает базу Go и готов писать аккуратные программы.", "Какой проект сделаешь дальше?", "🚀", "jump", "func main() {\n    fmt.Println(\"Гоша выбирает Go!\")\n}", "$ go run .\nГоша выбирает Go!", "Практика превращает синтаксис в навык."]
+        ]
+      }
+    ];
+
+    const el = {
+      episodeSelect: document.querySelector("#episodeSelect"),
+      episodeLabel: document.querySelector("#episodeLabel"),
+      sceneTitle: document.querySelector("#sceneTitle"),
+      sceneText: document.querySelector("#sceneText"),
+      boardTitle: document.querySelector("#boardTitle"),
+      sceneCounter: document.querySelector("#sceneCounter"),
+      codeBlock: document.querySelector("#codeBlock"),
+      terminal: document.querySelector("#terminal"),
+      bubble: document.querySelector("#bubble"),
+      prop: document.querySelector("#prop"),
+      gopher: document.querySelector("#gopher"),
+      quizTitle: document.querySelector("#quizTitle"),
+      quizText: document.querySelector("#quizText"),
+      status: document.querySelector("#status"),
+      timeLeft: document.querySelector("#timeLeft"),
+      progressBar: document.querySelector("#progressBar"),
+      playButton: document.querySelector("#playButton"),
+      pauseButton: document.querySelector("#pauseButton"),
+      nextButton: document.querySelector("#nextButton")
+    };
+
+    const params = new URLSearchParams(window.location.search);
+    let episodeIndex = Math.min(Math.max(Number(params.get("episode") || 1), 1), episodes.length) - 1;
+    let sceneIndex = 0;
+    let startedAt = 0;
+    let pausedAt = 0;
+    let playing = false;
+    let timer = null;
+    let ticker = null;
+    let audioContext = null;
+    let voice = null;
+
+    function escapeHTML(value) {
+      return value.replace(/[&<>]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[char]));
+    }
+
+    function colorize(code) {
+      return escapeHTML(code)
+        .replace(/\b(package|func|import|var|const|return|if|else|switch|case|default|defer|for|range|type|struct|map|nil|true|false)\b/g, "<span class=\"kw\">$1</span>")
+        .replace(/(&quot;.*?&quot;|\".*?\")/g, "<span class=\"str\">$1</span>")
+        .replace(/\b(\d+(?:\.\d+)?)\b/g, "<span class=\"num\">$1</span>")
+        .replace(/(\/\/.*)$/gm, "<span class=\"cm\">$1</span>");
+    }
+
+    function chooseVoice() {
+      if (!("speechSynthesis" in window)) return;
+      const voices = window.speechSynthesis.getVoices();
+      voice = voices.find((item) => item.lang.toLowerCase().startsWith("ru"))
+        || voices.find((item) => item.lang.toLowerCase().startsWith("en"))
+        || voices[0]
+        || null;
+    }
+
+    function ensureAudio() {
+      if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioContext.state === "suspended") {
+        audioContext.resume();
+      }
+    }
+
+    function tone(freq, delay, duration, type = "sine", gain = 0.05) {
+      if (!audioContext) return;
+      const oscillator = audioContext.createOscillator();
+      const volume = audioContext.createGain();
+      oscillator.type = type;
+      oscillator.frequency.setValueAtTime(freq, audioContext.currentTime + delay);
+      volume.gain.setValueAtTime(0.0001, audioContext.currentTime + delay);
+      volume.gain.exponentialRampToValueAtTime(gain, audioContext.currentTime + delay + 0.03);
+      volume.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + delay + duration);
+      oscillator.connect(volume).connect(audioContext.destination);
+      oscillator.start(audioContext.currentTime + delay);
+      oscillator.stop(audioContext.currentTime + delay + duration + 0.04);
+    }
+
+    function playSound(index) {
+      ensureAudio();
+      const base = [392, 440, 494, 523, 587, 659, 784][index % 7];
+      tone(base, 0, 0.12, "triangle", 0.055);
+      tone(base * 1.25, 0.15, 0.12, "sine", 0.045);
+      tone(base * 1.5, 0.33, 0.18, "square", 0.025);
+    }
+
+    function narrate(text) {
+      if (!("speechSynthesis" in window)) return;
+      window.speechSynthesis.cancel();
+      chooseVoice();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = voice?.lang || "ru-RU";
+      utterance.voice = voice;
+      utterance.rate = 0.93;
+      utterance.pitch = 1.05;
+      window.speechSynthesis.speak(utterance);
+    }
+
+    function render() {
+      const episode = episodes[episodeIndex];
+      const scene = episode.scenes[sceneIndex];
+      el.episodeLabel.textContent = `Серия ${episodeIndex + 1}: ${episode.summary}`;
+      el.sceneTitle.textContent = scene[0];
+      el.sceneText.textContent = scene[1];
+      el.quizTitle.textContent = "Вопрос Гоши";
+      el.quizText.textContent = scene[2];
+      el.prop.textContent = scene[3];
+      el.gopher.className = `gopher ${scene[4]}`;
+      el.boardTitle.textContent = scene[7];
+      el.sceneCounter.textContent = `${sceneIndex + 1} / ${episode.scenes.length}`;
+      el.codeBlock.innerHTML = colorize(scene[5]);
+      el.terminal.textContent = scene[6];
+      el.bubble.textContent = scene[8];
+      el.episodeSelect.value = String(episodeIndex);
+      updateClock();
+    }
+
+    function updateClock() {
+      const elapsed = playing ? Date.now() - startedAt : pausedAt;
+      const clamped = Math.min(elapsed, EPISODE_MS);
+      const left = Math.max(0, EPISODE_MS - clamped);
+      const minutes = String(Math.floor(left / 60000)).padStart(2, "0");
+      const seconds = String(Math.floor((left % 60000) / 1000)).padStart(2, "0");
+      el.timeLeft.textContent = `${minutes}:${seconds}`;
+      el.progressBar.style.width = `${(clamped / EPISODE_MS) * 100}%`;
+
+      const sceneDuration = EPISODE_MS / episodes[episodeIndex].scenes.length;
+      const calculatedScene = Math.min(episodes[episodeIndex].scenes.length - 1, Math.floor(clamped / sceneDuration));
+      if (calculatedScene !== sceneIndex) {
+        sceneIndex = calculatedScene;
+        render();
+        playSound(sceneIndex);
+        narrate(`${el.sceneTitle.textContent}. ${el.sceneText.textContent}`);
+      }
+
+      if (left <= 0 && playing) {
+        finish();
+      }
+    }
+
+    function start() {
+      playing = true;
+      sceneIndex = 0;
+      pausedAt = 0;
+      startedAt = Date.now();
+      el.status.textContent = "Серия идет";
+      render();
+      playSound(0);
+      narrate(`${episodes[episodeIndex].name}. ${el.sceneTitle.textContent}. ${el.sceneText.textContent}`);
+      window.clearInterval(ticker);
+      ticker = window.setInterval(updateClock, 500);
+      window.clearTimeout(timer);
+      timer = window.setTimeout(finish, EPISODE_MS + 300);
+    }
+
+    function pause() {
+      if (!playing) return;
+      pausedAt = Date.now() - startedAt;
+      playing = false;
+      el.status.textContent = "Пауза";
+      window.clearInterval(ticker);
+      window.clearTimeout(timer);
+      if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+      updateClock();
+    }
+
+    function finish() {
+      playing = false;
+      pausedAt = EPISODE_MS;
+      window.clearInterval(ticker);
+      window.clearTimeout(timer);
+      el.status.textContent = "Серия завершена";
+      updateClock();
+      playSound(episodes[episodeIndex].scenes.length + 2);
+      if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+    }
+
+    function nextScene() {
+      const episode = episodes[episodeIndex];
+      sceneIndex = (sceneIndex + 1) % episode.scenes.length;
+      pausedAt = sceneIndex * (EPISODE_MS / episode.scenes.length);
+      if (playing) startedAt = Date.now() - pausedAt;
+      render();
+      playSound(sceneIndex);
+      narrate(`${el.sceneTitle.textContent}. ${el.sceneText.textContent}`);
+    }
+
+    episodes.forEach((episode, index) => {
+      const option = document.createElement("option");
+      option.value = String(index);
+      option.textContent = episode.name;
+      el.episodeSelect.append(option);
+    });
+
+    el.episodeSelect.addEventListener("change", (event) => {
+      episodeIndex = Number(event.target.value);
+      sceneIndex = 0;
+      pausedAt = 0;
+      if (playing) {
+        start();
+      } else {
+        render();
+      }
+    });
+
+    el.playButton.addEventListener("click", start);
+    el.pauseButton.addEventListener("click", pause);
+    el.nextButton.addEventListener("click", nextScene);
+
+    if ("speechSynthesis" in window) {
+      window.speechSynthesis.addEventListener("voiceschanged", chooseVoice);
+      chooseVoice();
+    }
+
+    render();
+
+    if (params.get("autoplay") === "1") {
+      window.setTimeout(start, 1200);
+    }
+  </script>
+</body>
+</html>
