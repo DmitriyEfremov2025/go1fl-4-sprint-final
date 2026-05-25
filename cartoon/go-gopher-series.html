@@ -751,6 +751,8 @@
     let timer = null;
     let ticker = null;
     let audioContext = null;
+    let beethovenTimer = null;
+    let beethovenNodes = [];
     let voice = null;
 
     function escapeHTML(value) {
@@ -797,12 +799,85 @@
       oscillator.stop(audioContext.currentTime + delay + duration + 0.04);
     }
 
-    function playSound(index) {
+    const noteFrequencies = {
+      C3: 130.81,
+      D3: 146.83,
+      E3: 164.81,
+      F3: 174.61,
+      G3: 196.00,
+      C4: 261.63,
+      D4: 293.66,
+      E4: 329.63,
+      F4: 349.23,
+      G4: 392.00
+    };
+
+    const odeToJoyMelody = [
+      "E4", "E4", "F4", "G4", "G4", "F4", "E4", "D4",
+      "C4", "C4", "D4", "E4", "E4", "D4", "D4",
+      "E4", "E4", "F4", "G4", "G4", "F4", "E4", "D4",
+      "C4", "C4", "D4", "E4", "D4", "C4", "C4"
+    ];
+
+    const odeToJoyBass = [
+      "C3", "C3", "G3", "G3", "C3", "C3", "G3", "G3",
+      "F3", "F3", "G3", "C3", "G3", "C3", "C3"
+    ];
+
+    function scheduleMusicNote(frequency, startAt, duration, type, gain) {
+      const oscillator = audioContext.createOscillator();
+      const volume = audioContext.createGain();
+      oscillator.type = type;
+      oscillator.frequency.setValueAtTime(frequency, startAt);
+      volume.gain.setValueAtTime(0.0001, startAt);
+      volume.gain.exponentialRampToValueAtTime(gain, startAt + 0.04);
+      volume.gain.exponentialRampToValueAtTime(0.0001, startAt + duration);
+      oscillator.connect(volume).connect(audioContext.destination);
+      oscillator.start(startAt);
+      oscillator.stop(startAt + duration + 0.04);
+      beethovenNodes.push(oscillator);
+    }
+
+    function scheduleBeethovenLoop() {
+      if (!audioContext) return;
+
+      const beat = 0.42;
+      const startAt = audioContext.currentTime + 0.08;
+
+      odeToJoyMelody.forEach((note, index) => {
+        scheduleMusicNote(noteFrequencies[note], startAt + index * beat, beat * 0.92, "triangle", 0.032);
+      });
+
+      odeToJoyBass.forEach((note, index) => {
+        scheduleMusicNote(noteFrequencies[note], startAt + index * beat * 2, beat * 1.65, "sine", 0.018);
+      });
+    }
+
+    function startBeethovenBackground() {
       ensureAudio();
+      if (beethovenTimer) return;
+
+      scheduleBeethovenLoop();
+      beethovenTimer = window.setInterval(scheduleBeethovenLoop, 11800);
+    }
+
+    function stopBeethovenBackground() {
+      window.clearInterval(beethovenTimer);
+      beethovenTimer = null;
+      beethovenNodes.forEach((node) => {
+        try {
+          node.stop();
+        } catch {
+          // The note may already have finished.
+        }
+      });
+      beethovenNodes = [];
+    }
+
+    function playSound(index) {
+      startBeethovenBackground();
       const base = [392, 440, 494, 523, 587, 659, 784][index % 7];
-      tone(base, 0, 0.12, "triangle", 0.055);
-      tone(base * 1.25, 0.15, 0.12, "sine", 0.045);
-      tone(base * 1.5, 0.33, 0.18, "square", 0.025);
+      tone(base, 0, 0.08, "triangle", 0.012);
     }
 
     function narrate(text) {
@@ -866,6 +941,8 @@
       startedAt = Date.now();
       el.status.textContent = "Серия идет";
       render();
+      stopBeethovenBackground();
+      startBeethovenBackground();
       playSound(0);
       narrate(`${episodes[episodeIndex].name}. ${el.sceneTitle.textContent}. ${el.sceneText.textContent}`);
       window.clearInterval(ticker);
@@ -881,6 +958,7 @@
       el.status.textContent = "Пауза";
       window.clearInterval(ticker);
       window.clearTimeout(timer);
+      stopBeethovenBackground();
       if ("speechSynthesis" in window) window.speechSynthesis.cancel();
       updateClock();
     }
@@ -892,7 +970,7 @@
       window.clearTimeout(timer);
       el.status.textContent = "Серия завершена";
       updateClock();
-      playSound(episodes[episodeIndex].scenes.length + 2);
+      stopBeethovenBackground();
       if ("speechSynthesis" in window) window.speechSynthesis.cancel();
     }
 
