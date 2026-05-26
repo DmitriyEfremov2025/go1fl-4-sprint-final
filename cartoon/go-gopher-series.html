@@ -751,6 +751,7 @@
     let timer = null;
     let ticker = null;
     let audioContext = null;
+    let musicGain = null;
     let beethovenTimer = null;
     let beethovenNodes = [];
     let voice = null;
@@ -767,22 +768,52 @@
         .replace(/(\/\/.*)$/gm, "<span class=\"cm\">$1</span>");
     }
 
+    function voiceScore(item) {
+      const name = item.name.toLowerCase();
+      const lang = item.lang.toLowerCase();
+      let score = 0;
+      if (lang.startsWith("ru")) score += 100;
+      if (lang.startsWith("en")) score += 20;
+      if (/natural|premium|neural|online|google|microsoft|yandex/.test(name)) score += 25;
+      if (/female|жен|alena|irina|svetlana|milena/.test(name)) score += 6;
+      if (item.localService) score += 2;
+      return score;
+    }
+
     function chooseVoice() {
       if (!("speechSynthesis" in window)) return;
       const voices = window.speechSynthesis.getVoices();
-      voice = voices.find((item) => item.lang.toLowerCase().startsWith("ru"))
-        || voices.find((item) => item.lang.toLowerCase().startsWith("en"))
-        || voices[0]
+      voice = voices
+        .slice()
+        .sort((left, right) => voiceScore(right) - voiceScore(left))[0]
         || null;
+    }
+
+    function smoothNarrationText(text) {
+      return text
+        .replace(/! /g, "! ... ")
+        .replace(/\. /g, ". ... ")
+        .replace(/: /g, ": ... ")
+        .replace(/Go/g, "Гоу");
     }
 
     function ensureAudio() {
       if (!audioContext) {
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        musicGain = audioContext.createGain();
+        musicGain.gain.setValueAtTime(0.82, audioContext.currentTime);
+        musicGain.connect(audioContext.destination);
       }
       if (audioContext.state === "suspended") {
         audioContext.resume();
       }
+    }
+
+    function duckMusic(shouldDuck) {
+      if (!audioContext || !musicGain) return;
+      const target = shouldDuck ? 0.28 : 0.82;
+      musicGain.gain.cancelScheduledValues(audioContext.currentTime);
+      musicGain.gain.setTargetAtTime(target, audioContext.currentTime, 0.35);
     }
 
     function tone(freq, delay, duration, type = "sine", gain = 0.05) {
@@ -832,7 +863,7 @@
       volume.gain.setValueAtTime(0.0001, startAt);
       volume.gain.exponentialRampToValueAtTime(gain, startAt + 0.04);
       volume.gain.exponentialRampToValueAtTime(0.0001, startAt + duration);
-      oscillator.connect(volume).connect(audioContext.destination);
+      oscillator.connect(volume).connect(musicGain || audioContext.destination);
       oscillator.start(startAt);
       oscillator.stop(startAt + duration + 0.04);
       beethovenNodes.push(oscillator);
@@ -884,11 +915,15 @@
       if (!("speechSynthesis" in window)) return;
       window.speechSynthesis.cancel();
       chooseVoice();
-      const utterance = new SpeechSynthesisUtterance(text);
+      const utterance = new SpeechSynthesisUtterance(smoothNarrationText(text));
       utterance.lang = voice?.lang || "ru-RU";
       utterance.voice = voice;
-      utterance.rate = 0.93;
-      utterance.pitch = 1.05;
+      utterance.rate = 0.84;
+      utterance.pitch = 0.98;
+      utterance.volume = 0.96;
+      utterance.onstart = () => duckMusic(true);
+      utterance.onend = () => duckMusic(false);
+      utterance.onerror = () => duckMusic(false);
       window.speechSynthesis.speak(utterance);
     }
 
@@ -959,6 +994,7 @@
       window.clearInterval(ticker);
       window.clearTimeout(timer);
       stopBeethovenBackground();
+      duckMusic(false);
       if ("speechSynthesis" in window) window.speechSynthesis.cancel();
       updateClock();
     }
@@ -971,6 +1007,7 @@
       el.status.textContent = "Серия завершена";
       updateClock();
       stopBeethovenBackground();
+      duckMusic(false);
       if ("speechSynthesis" in window) window.speechSynthesis.cancel();
     }
 

@@ -976,12 +976,32 @@ println(double(4)) <span class="code-comment">// 8</span>`,
     let audioContext = null;
     let selectedVoice = null;
 
+    function voiceScore(voice) {
+      const name = voice.name.toLowerCase();
+      const lang = voice.lang.toLowerCase();
+      let score = 0;
+      if (lang.startsWith("ru")) score += 100;
+      if (lang.startsWith("en")) score += 20;
+      if (/natural|premium|neural|online|google|microsoft|yandex/.test(name)) score += 25;
+      if (/female|жен|alena|irina|svetlana|milena/.test(name)) score += 6;
+      if (voice.localService) score += 2;
+      return score;
+    }
+
     function chooseVoice() {
       const voices = window.speechSynthesis ? window.speechSynthesis.getVoices() : [];
-      selectedVoice = voices.find((voice) => voice.lang.toLowerCase().startsWith("ru"))
-        || voices.find((voice) => voice.lang.toLowerCase().startsWith("en"))
-        || voices[0]
+      selectedVoice = voices
+        .slice()
+        .sort((left, right) => voiceScore(right) - voiceScore(left))[0]
         || null;
+    }
+
+    function smoothNarrationText(text) {
+      return text
+        .replace(/! /g, "! ... ")
+        .replace(/\. /g, ". ... ")
+        .replace(/: /g, ": ... ")
+        .replace(/Go/g, "Гоу");
     }
 
     function ensureAudioContext() {
@@ -1037,14 +1057,14 @@ println(double(4)) <span class="code-comment">// 8</span>`,
       window.speechSynthesis.cancel();
       chooseVoice();
 
-      const utterance = new SpeechSynthesisUtterance(text);
+      const utterance = new SpeechSynthesisUtterance(smoothNarrationText(text));
       utterance.lang = selectedVoice?.lang || "ru-RU";
       utterance.voice = selectedVoice;
-      utterance.rate = 0.95;
-      utterance.pitch = 1.08;
-      utterance.volume = 1;
+      utterance.rate = 0.84;
+      utterance.pitch = 0.98;
+      utterance.volume = 0.96;
       utterance.onstart = () => {
-        elements.soundStatus.textContent = "Звук: озвучка включена";
+        elements.soundStatus.textContent = "Звук: плавная озвучка включена";
       };
       utterance.onerror = () => {
         elements.soundStatus.textContent = "Звук: эффекты включены, речь недоступна";
