@@ -310,24 +310,62 @@
 
     .body {
       position: absolute;
-      left: 38px;
+      left: 27px;
       bottom: 0;
-      width: 152px;
-      height: 192px;
-      border-radius: 48% 48% 34% 34%;
-      background: var(--gopher);
-      box-shadow: inset -20px -14px 0 rgba(68, 38, 22, 0.13);
+      width: 174px;
+      height: 198px;
+      border-radius: 54% 54% 32% 32%;
+      background:
+        radial-gradient(circle at 30% 34%, rgba(255, 223, 176, 0.8) 0 10%, transparent 10.5%),
+        radial-gradient(circle at 70% 34%, rgba(255, 223, 176, 0.8) 0 10%, transparent 10.5%),
+        linear-gradient(110deg, var(--gopher-light) 0 28%, var(--gopher) 28% 72%, var(--gopher-dark) 72%);
+      box-shadow: inset -24px -14px 0 rgba(68, 38, 22, 0.13), 0 8px 0 rgba(6, 53, 75, 0.08);
     }
+
+    .body::before,
+    .body::after {
+      position: absolute;
+      top: 32px;
+      width: 58px;
+      height: 44px;
+      border-radius: 50%;
+      background: rgba(255, 210, 156, 0.72);
+      content: "";
+    }
+
+    .body::before { left: 28px; transform: rotate(-8deg); }
+    .body::after { right: 28px; transform: rotate(8deg); }
 
     .belly {
       position: absolute;
-      left: 29px;
-      bottom: 23px;
-      width: 94px;
-      height: 122px;
-      border-radius: 48%;
-      background: var(--gopher-light);
+      z-index: 2;
+      left: 36px;
+      bottom: 22px;
+      width: 102px;
+      height: 136px;
+      border: 5px solid #06354b;
+      border-radius: 38% 38% 30% 30%;
+      background:
+        linear-gradient(90deg, transparent 47%, rgba(255, 255, 255, 0.62) 47% 53%, transparent 53%),
+        repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.22) 0 3px, transparent 3px 32px),
+        linear-gradient(145deg, #05c8f0, #007d9c 68%);
+      box-shadow: inset 0 -16px 0 rgba(0, 0, 0, 0.12);
     }
+
+    .belly::before,
+    .belly::after {
+      position: absolute;
+      top: 27px;
+      width: 22px;
+      height: 70px;
+      border-top: 5px solid rgba(255, 255, 255, 0.78);
+      border-bottom: 5px solid rgba(255, 255, 255, 0.55);
+      border-radius: 12px;
+      content: "";
+    }
+
+    .belly::before { left: 18px; }
+    .belly::after { right: 18px; }
 
     .head {
       position: absolute;
@@ -374,43 +412,121 @@
 
     .cap {
       position: absolute;
-      z-index: 3;
-      left: 47px;
-      top: -2px;
-      width: 90px;
-      height: 36px;
-      border-radius: 50% 50% 8px 8px;
-      background: var(--go);
+      z-index: 4;
+      left: 34px;
+      top: 8px;
+      width: 112px;
+      height: 24px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #111827, var(--go), #111827);
+      box-shadow: 0 5px 0 rgba(0, 0, 0, 0.13);
       transform: rotate(-4deg);
     }
 
     .cap::after {
       position: absolute;
-      right: -32px;
-      bottom: 0;
-      width: 42px;
-      height: 14px;
-      border-radius: 0 999px 999px 0;
-      background: var(--go-dark);
+      right: -20px;
+      top: 8px;
+      width: 38px;
+      height: 10px;
+      border-radius: 999px;
+      background: #111827;
       content: "";
+    }
+
+    .sunglasses {
+      position: absolute;
+      z-index: 5;
+      left: 40px;
+      top: 60px;
+      width: 98px;
+      height: 30px;
+      border-radius: 16px;
+      background:
+        radial-gradient(ellipse at 28% 50%, #07111a 0 24%, transparent 25%),
+        radial-gradient(ellipse at 72% 50%, #07111a 0 24%, transparent 25%),
+        linear-gradient(#07111a 0 0) center / 20px 5px no-repeat;
+      opacity: 0.96;
+    }
+
+    .chain {
+      position: absolute;
+      z-index: 4;
+      left: 64px;
+      top: 142px;
+      width: 52px;
+      height: 24px;
+      border-bottom: 6px solid #ffd762;
+      border-radius: 0 0 50% 50%;
     }
 
     .paw {
       position: absolute;
-      z-index: 2;
-      top: 150px;
-      width: 48px;
-      height: 78px;
+      z-index: 3;
+      top: 136px;
+      width: 64px;
+      height: 94px;
       border-radius: 999px;
-      background: var(--gopher-dark);
+      background:
+        radial-gradient(circle at 50% 20%, var(--gopher-light) 0 26%, transparent 27%),
+        linear-gradient(150deg, var(--gopher), var(--gopher-dark));
+      box-shadow: inset -10px -9px 0 rgba(42, 25, 16, 0.16);
       transform-origin: 50% 12%;
     }
 
-    .paw.left { left: 9px; transform: rotate(26deg); }
-    .paw.right { right: 10px; transform: rotate(-35deg); animation: point 1.2s ease-in-out infinite; }
-    .foot { position: absolute; bottom: -6px; width: 64px; height: 34px; border-radius: 50%; background: var(--gopher-dark); }
-    .foot.left { left: 40px; }
-    .foot.right { right: 27px; }
+    .paw::after {
+      position: absolute;
+      bottom: -12px;
+      left: 9px;
+      width: 46px;
+      height: 38px;
+      border-radius: 50%;
+      background: var(--gopher-light);
+      box-shadow: inset -7px -5px 0 rgba(42, 25, 16, 0.12);
+      content: "";
+    }
+
+    .paw.left { left: -3px; transform: rotate(34deg); }
+    .paw.right { right: -7px; transform: rotate(-48deg); animation: point 1.2s ease-in-out infinite; }
+
+    .dumbbell {
+      position: absolute;
+      z-index: 1;
+      right: -30px;
+      bottom: 1px;
+      width: 86px;
+      height: 16px;
+      border-radius: 999px;
+      background: #1f2937;
+      transform: rotate(18deg);
+    }
+
+    .dumbbell::before,
+    .dumbbell::after {
+      position: absolute;
+      top: -13px;
+      width: 22px;
+      height: 42px;
+      border-radius: 8px;
+      background: #111827;
+      box-shadow: 0 0 0 5px #374151;
+      content: "";
+    }
+
+    .dumbbell::before { left: -4px; }
+    .dumbbell::after { right: -4px; }
+
+    .foot {
+      position: absolute;
+      z-index: 3;
+      bottom: -8px;
+      width: 72px;
+      height: 36px;
+      border-radius: 50% 50% 42% 42%;
+      background: linear-gradient(#111827 0 58%, #ffffff 58% 72%, #00add8 72%);
+    }
+    .foot.left { left: 36px; }
+    .foot.right { right: 20px; }
 
     .laptop {
       position: absolute;
@@ -580,7 +696,7 @@
     <header>
       <div>
         <h1>Гофер Гоша: Go за 3 серии</h1>
-        <p class="lead">Улучшенный учебный мультфильм: больше сцен, крупнее код, мини-викторины, автостарт для записи и звуковые эффекты. Каждая серия рассчитана на 5 минут.</p>
+        <p class="lead">Улучшенный учебный мультфильм: больше сцен, крупнее код, мини-викторины, автостарт, музыка Бетховена и новый накачанный гофер-инструктор. Каждая серия рассчитана на 5 минут.</p>
       </div>
       <div class="episode-picker">
         <label for="episodeSelect">Выбери серию</label>
@@ -619,13 +735,15 @@
           <div class="ear right"></div>
           <div class="eye left"></div>
           <div class="eye right"></div>
+          <div class="sunglasses"></div>
           <div class="nose"></div>
           <div class="mouth"></div>
           <div class="tooth one"></div>
           <div class="tooth two"></div>
         </div>
+        <div class="chain"></div>
         <div class="paw left"></div>
-        <div class="paw right"></div>
+        <div class="paw right"><div class="dumbbell"></div></div>
         <div class="foot left"></div>
         <div class="foot right"></div>
       </div>
