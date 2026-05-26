@@ -337,62 +337,24 @@
 
     .body {
       position: absolute;
-      left: 24px;
+      left: 34px;
       bottom: 0;
-      width: 164px;
-      height: 190px;
-      border-radius: 54% 54% 33% 33%;
-      background:
-        radial-gradient(circle at 30% 34%, rgba(255, 223, 176, 0.8) 0 10%, transparent 10.5%),
-        radial-gradient(circle at 70% 34%, rgba(255, 223, 176, 0.8) 0 10%, transparent 10.5%),
-        linear-gradient(110deg, var(--gopher-light) 0 28%, var(--gopher) 28% 72%, var(--gopher-dark) 72%);
-      box-shadow: inset -22px -12px 0 rgba(75, 45, 29, 0.13), 0 8px 0 rgba(6, 53, 75, 0.08);
+      width: 145px;
+      height: 185px;
+      border-radius: 48% 48% 35% 35%;
+      background: var(--gopher);
+      box-shadow: inset -18px -12px 0 rgba(75, 45, 29, 0.12);
     }
-
-    .body::before,
-    .body::after {
-      position: absolute;
-      top: 31px;
-      width: 54px;
-      height: 42px;
-      border-radius: 50%;
-      background: rgba(255, 210, 156, 0.72);
-      content: "";
-    }
-
-    .body::before { left: 25px; transform: rotate(-8deg); }
-    .body::after { right: 25px; transform: rotate(8deg); }
 
     .belly {
       position: absolute;
-      z-index: 2;
-      left: 34px;
+      left: 28px;
       bottom: 20px;
-      width: 96px;
-      height: 130px;
-      border: 5px solid #043b5c;
-      border-radius: 38% 38% 30% 30%;
-      background:
-        linear-gradient(90deg, transparent 47%, rgba(255, 255, 255, 0.62) 47% 53%, transparent 53%),
-        repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.22) 0 3px, transparent 3px 30px),
-        linear-gradient(145deg, #05c8f0, #007d9c 68%);
-      box-shadow: inset 0 -15px 0 rgba(0, 0, 0, 0.12);
+      width: 88px;
+      height: 118px;
+      border-radius: 48%;
+      background: var(--gopher-light);
     }
-
-    .belly::before,
-    .belly::after {
-      position: absolute;
-      top: 25px;
-      width: 20px;
-      height: 66px;
-      border-top: 5px solid rgba(255, 255, 255, 0.78);
-      border-bottom: 5px solid rgba(255, 255, 255, 0.55);
-      border-radius: 12px;
-      content: "";
-    }
-
-    .belly::before { left: 17px; }
-    .belly::after { right: 17px; }
 
     .head {
       position: absolute;
@@ -464,121 +426,39 @@
     .tooth.one { left: 70px; }
     .tooth.two { left: 85px; }
 
-    .headband {
-      position: absolute;
-      z-index: 4;
-      left: 31px;
-      top: 11px;
-      width: 106px;
-      height: 23px;
-      border-radius: 999px;
-      background: linear-gradient(90deg, #111827, var(--blue), #111827);
-      box-shadow: 0 5px 0 rgba(0, 0, 0, 0.13);
-      transform: rotate(-4deg);
-    }
-
-    .sunglasses {
-      position: absolute;
-      z-index: 5;
-      left: 36px;
-      top: 58px;
-      width: 96px;
-      height: 30px;
-      border-radius: 16px;
-      background:
-        radial-gradient(ellipse at 28% 50%, #07111a 0 24%, transparent 25%),
-        radial-gradient(ellipse at 72% 50%, #07111a 0 24%, transparent 25%),
-        linear-gradient(#07111a 0 0) center / 20px 5px no-repeat;
-      opacity: 0.96;
-    }
-
-    .chain {
-      position: absolute;
-      z-index: 4;
-      left: 58px;
-      top: 136px;
-      width: 52px;
-      height: 24px;
-      border-bottom: 6px solid #ffd762;
-      border-radius: 0 0 50% 50%;
-    }
-
     .paw {
       position: absolute;
-      z-index: 3;
-      top: 135px;
-      width: 60px;
-      height: 90px;
+      z-index: 2;
+      top: 143px;
+      width: 45px;
+      height: 74px;
       border-radius: 999px;
-      background:
-        radial-gradient(circle at 50% 20%, var(--gopher-light) 0 26%, transparent 27%),
-        linear-gradient(150deg, var(--gopher), var(--gopher-dark));
-      box-shadow: inset -10px -8px 0 rgba(42, 25, 16, 0.16);
+      background: var(--gopher-dark);
       transform-origin: 50% 10%;
     }
 
-    .paw::after {
-      position: absolute;
-      bottom: -11px;
-      left: 8px;
-      width: 44px;
-      height: 36px;
-      border-radius: 50%;
-      background: var(--gopher-light);
-      box-shadow: inset -7px -5px 0 rgba(42, 25, 16, 0.12);
-      content: "";
-    }
-
     .paw.left {
-      left: -1px;
-      transform: rotate(34deg);
+      left: 10px;
+      transform: rotate(25deg);
     }
 
     .paw.right {
-      right: -6px;
-      transform: rotate(-48deg);
+      right: 11px;
+      transform: rotate(-35deg);
       animation: point 1.3s ease-in-out infinite;
     }
 
-    .dumbbell {
-      position: absolute;
-      z-index: 1;
-      right: -29px;
-      bottom: 1px;
-      width: 82px;
-      height: 15px;
-      border-radius: 999px;
-      background: #1f2937;
-      transform: rotate(18deg);
-    }
-
-    .dumbbell::before,
-    .dumbbell::after {
-      position: absolute;
-      top: -12px;
-      width: 21px;
-      height: 40px;
-      border-radius: 8px;
-      background: #111827;
-      box-shadow: 0 0 0 5px #374151;
-      content: "";
-    }
-
-    .dumbbell::before { left: -4px; }
-    .dumbbell::after { right: -4px; }
-
     .foot {
       position: absolute;
-      z-index: 3;
-      bottom: -8px;
-      width: 70px;
-      height: 35px;
-      border-radius: 50% 50% 42% 42%;
-      background: linear-gradient(#111827 0 58%, #ffffff 58% 72%, #00add8 72%);
+      bottom: -6px;
+      width: 60px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--gopher-dark);
     }
 
-    .foot.left { left: 34px; }
-    .foot.right { right: 18px; }
+    .foot.left { left: 38px; }
+    .foot.right { right: 25px; }
 
     .go-badge {
       position: absolute;
@@ -879,7 +759,7 @@
   <main class="app">
     <header>
       <h1>Гофер Гоша учит Go</h1>
-      <p class="lead">Небольшой мультфильм со звуком: современный накачанный суслик-гофер выходит из норки, открывает ноутбук и знакомится с переменными, типами, функциями, условиями и циклами в Go.</p>
+      <p class="lead">Небольшой мультфильм со звуком: суслик-гофер выходит из норки, открывает ноутбук и знакомится с переменными, типами, функциями, условиями и циклами в Go.</p>
     </header>
 
     <section class="stage" aria-label="Мультфильм про обучение Go">
@@ -908,20 +788,17 @@
           <div class="belly"></div>
         </div>
         <div class="head">
-          <div class="headband"></div>
           <div class="ear left"></div>
           <div class="ear right"></div>
           <div class="eye left"></div>
           <div class="eye right"></div>
-          <div class="sunglasses"></div>
           <div class="nose"></div>
           <div class="mouth"></div>
           <div class="tooth one"></div>
           <div class="tooth two"></div>
         </div>
-        <div class="chain"></div>
         <div class="paw left"></div>
-        <div class="paw right"><div class="dumbbell"></div></div>
+        <div class="paw right"></div>
         <div class="foot left"></div>
         <div class="foot right"></div>
         <div class="go-badge">Go</div>
