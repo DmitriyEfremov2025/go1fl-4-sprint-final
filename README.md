@@ -26,7 +26,13 @@ cartoon/go-gopher-series.html?episode=3&autoplay=1
 https://make-smart-products.github.io/go1fl-4-sprint-final/
 ```
 
-Корневая страница `index.html` автоматически открывает улучшенную версию `cartoon/go-gopher-series.html`. Публикация выполняется workflow `.github/workflows/deploy-cartoon-pages.yaml`.
+Корневая страница `index.html` автоматически открывает улучшенную версию `cartoon/go-gopher-series.html`. Публикация выполняется workflow `.github/workflows/deploy-cartoon-pages.yaml` после попадания изменений в `main`. Если Pages еще не включен в настройках репозитория, выберите **Settings -> Pages -> Source: GitHub Actions**.
+
+Открыть текущую веб-версию из рабочей ветки можно через HTML Preview:
+
+```text
+https://htmlpreview.github.io/?https://github.com/make-smart-products/go1fl-4-sprint-final/blob/cursor/go-gopher-cartoon-9d42/cartoon/go-gopher-series.html
+```
 
 ## Тестирование проекта
 

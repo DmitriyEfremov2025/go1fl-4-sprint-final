@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - cursor/go-gopher-cartoon-9d42
   workflow_dispatch:
 
 permissions:
